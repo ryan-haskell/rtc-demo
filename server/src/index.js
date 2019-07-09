@@ -38,7 +38,6 @@ const WebRTC = {
 
 // Express web server
 const app = express()
-app.use(require('cors'))
 const server = http.createServer(app)
 const io = socketIo(server)
 
