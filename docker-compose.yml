@@ -1,0 +1,28 @@
+version: '3.1'
+
+services:
+
+  server:
+    image: node:10.16.0
+    working_dir: /app
+    volumes:
+      - ./server/src:/app/src
+      - ./server/package.json:/app/package.json
+    environment:
+      - HOST=0.0.0.0
+      - STUN_SERVER=stun:localhost:4000
+    ports:
+      - 3000:3000
+    command: [ 'npm', 'run', 'docker' ]
+
+  client:
+    image: node:10.16.0
+    working_dir: /app
+    environment:
+      - STUN_SERVER=stun:stun:80
+    volumes:
+      - ./client/src:/app/src
+      - ./client/package.json:/app/package.json
+    ports:
+      - 1234:1234
+    command: [ 'npm', 'run', 'docker' ]
