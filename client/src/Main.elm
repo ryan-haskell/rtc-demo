@@ -37,4 +37,4 @@ view model =
 
     else
         button [ onClick Clicky ]
-            [ Html.text "Hello world!" ]
+            [ Html.text "Connect" ]

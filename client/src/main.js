@@ -33,7 +33,12 @@ const onOfferCreated = ({ connection, socket }) => (description) => {
 }
 
 const onIceCandidate = ({ socket }) => ({ candidate }) =>
-  candidate && socket.emit('ice-candidate', debug('candidate')(candidate))
+  candidate && socket.emit('ice-candidate', debug('local candidate')(candidate))
+
+const onChannelOpen = channel => (_event) => {
+  console.log('open', channel)
+  setInterval(_ => channel.send('ping'), 100)
+}
 
 const connect = () => {
   const socket = io(config.socket.server)
@@ -43,8 +48,9 @@ const connect = () => {
     const channel = connection.createDataChannel('dc', config.rtc.channel)
 
     channel.onmessage = debug('onChannelMessage')
-    channel.onopen = debug('onChannelOpen')
+    channel.onopen = onChannelOpen(channel)
     channel.onclose = debug('onChannelClose')
+    channel.onerror = debug('onerror')
 
     connection.onicecandidate = onIceCandidate({ socket })
 
@@ -53,9 +59,14 @@ const connect = () => {
       _ => undefined,
       config.sdp
     )
+
     socket.on('answer', answer =>
       connection.setRemoteDescription(new window.RTCSessionDescription(answer))
     )
+
+    socket.on('candidate', candidate => {
+      candidate && (console.log('remote candidate', candidate) || connection.addIceCandidate(new RTCIceCandidate(candidate)))
+    })
   })
 
   socket.on('disconnect', debug('disconnect'))

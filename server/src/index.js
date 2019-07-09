@@ -8,9 +8,6 @@ const config = {
   host: process.env.HOST || '0.0.0.0',
   port: parseInt(process.env.PORT) || 3000,
   rtc: {
-    connection: {
-      sdpSemantics: 'unified-plan'
-    },
     channel: {
       ordered: false,
       maxRetransmits: 0
@@ -21,10 +18,14 @@ const config = {
 const connections = {}
 
 // WebRTC Stuff
+const debug = label => thing => console.log(label, thing)
 const WebRTC = {
   onOfferCreated: ({ description }) => {
-    const connection = new RTCPeerConnection(config.rtc.connection)
-    connection.createDataChannel('dc', config.rtc.channel)
+    const connection = new RTCPeerConnection()
+    const channel = connection.createDataChannel('dc', config.rtc.channel)
+    channel.onopen = (event) => console.log('open', event)
+    channel.onclose = debug('onclose')
+    channel.onmessage = (event) => { console.log('event!') }
     connection.setRemoteDescription(description)
     return connection
   },
@@ -50,11 +51,16 @@ io.on('connection', (socket) => {
     Promise.resolve(WebRTC.onOfferCreated({ description }))
       .then(conn => {
         connections[id] = conn
+        connections[id].onicecandidate =
+          ({ candidate }) => socket.emit('candidate', candidate)
         console.log('connected:', Object.keys(connections))
         return conn
       })
       .then(WebRTC.createAnswer)
-      .then(answer => socket.emit('answer', answer))
+      .then(answer => {
+        connections[id].setLocalDescription(answer)
+        socket.emit('answer', answer)
+      })
       .catch(console.error)
   })
 
