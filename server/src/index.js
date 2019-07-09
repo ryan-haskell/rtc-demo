@@ -18,10 +18,12 @@ const config = {
   }
 }
 
+const connections = {}
+
 // WebRTC Stuff
 const WebRTC = {
   onOfferCreated: ({ description }) => {
-    let connection = new RTCPeerConnection(config.rtc.connection)
+    const connection = new RTCPeerConnection(config.rtc.connection)
     connection.createDataChannel('dc', config.rtc.channel)
     connection.setRemoteDescription(description)
     return connection
@@ -42,19 +44,29 @@ const server = http.createServer(app)
 const io = socketIo(server)
 
 io.on('connection', (socket) => {
-  let connection
-  socket.on('offer-created', description => {
+  const { id } = socket
+
+  socket.on('offer-created', (description) => {
     Promise.resolve(WebRTC.onOfferCreated({ description }))
-      .then(conn => (connection = conn))
+      .then(conn => {
+        connections[id] = conn
+        console.log('connected:', Object.keys(connections))
+        return conn
+      })
       .then(WebRTC.createAnswer)
       .then(answer => socket.emit('answer', answer))
       .catch(console.error)
   })
-  socket.on('ice-candidate', candidate =>
-    WebRTC.onIceCandidate({ connection, candidate })
+
+  socket.on('ice-candidate', (candidate) =>
+    WebRTC.onIceCandidate({ connection: connections[id], candidate })
       .catch(console.error)
   )
-  socket.on('disconnect', _ => console.log('disconnect'))
+
+  socket.on('disconnect', _ => {
+    delete connections[id]
+    console.log('connected:', Object.keys(connections))
+  })
 })
 
 const url = `http://${config.host}:${config.port}`
