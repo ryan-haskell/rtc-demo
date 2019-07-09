@@ -2,7 +2,7 @@
   "name": "@ryannhg/rtc-demo-client",
   "version": "1.0.0",
   "description": "> the frontend part that humans see.",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "start": "parcel src/index.html",
     "dev": "npm start",

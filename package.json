@@ -1,0 +1,30 @@
+{
+  "name": "@ryannhg/rtc-demo",
+  "version": "1.0.0",
+  "description": "a game built with WebRTC",
+  "main": "server/src/index.js",
+  "scripts": {
+    "start": "node server/src/index.js",
+    "dev": "nodemon server/src/index.js",
+    "docker": "npm install && npm run dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ryannhg/webrtc-demo.git"
+  },
+  "author": "Ryan Haskell-Glatz",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ryannhg/webrtc-demo/issues"
+  },
+  "homepage": "https://github.com/ryannhg/webrtc-demo#readme",
+  "dependencies": {
+    "body-parser": "1.19.0",
+    "express": "4.17.1",
+    "socket.io": "2.2.0",
+    "wrtc": "0.4.1"
+  },
+  "devDependencies": {
+    "nodemon": "1.19.1"
+  }
+}
