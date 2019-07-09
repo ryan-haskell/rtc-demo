@@ -1,3 +1,4 @@
+import { Elm } from './Main.elm'
 import io from 'socket.io-client'
 
 const config = {
@@ -34,26 +35,34 @@ const onOfferCreated = ({ connection, socket }) => (description) => {
 const onIceCandidate = ({ socket }) => ({ candidate }) =>
   candidate && socket.emit('ice-candidate', debug('candidate')(candidate))
 
-const socket = io(config.socket.server)
+const connect = () => {
+  const socket = io(config.socket.server)
 
-socket.on('connect', _ => {
-  const connection = new window.RTCPeerConnection(config.rtc.connection)
-  const channel = connection.createDataChannel('dc', config.rtc.channel)
+  socket.on('connect', _ => {
+    const connection = new window.RTCPeerConnection(config.rtc.connection)
+    const channel = connection.createDataChannel('dc', config.rtc.channel)
 
-  channel.onmessage = debug('onChannelMessage')
-  channel.onopen = debug('onChannelOpen')
-  channel.onclose = debug('onChannelClose')
+    channel.onmessage = debug('onChannelMessage')
+    channel.onopen = debug('onChannelOpen')
+    channel.onclose = debug('onChannelClose')
 
-  connection.onicecandidate = onIceCandidate({ socket })
+    connection.onicecandidate = onIceCandidate({ socket })
 
-  connection.createOffer(
-    onOfferCreated({ connection, socket }),
-    _ => undefined,
-    config.sdp
-  )
-  socket.on('answer', answer =>
-    connection.setRemoteDescription(new window.RTCSessionDescription(answer))
-  )
+    connection.createOffer(
+      onOfferCreated({ connection, socket }),
+      _ => undefined,
+      config.sdp
+    )
+    socket.on('answer', answer =>
+      connection.setRemoteDescription(new window.RTCSessionDescription(answer))
+    )
+  })
+
+  socket.on('disconnect', debug('disconnect'))
+}
+
+const app = Elm.Main.init({
+  node: document.getElementById('app')
 })
 
-socket.on('disconnect', debug('disconnect'))
+app.ports.outgoing.subscribe(connect)
